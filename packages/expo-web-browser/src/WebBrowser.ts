@@ -1,5 +1,5 @@
 import { UnavailabilityError } from 'expo-modules-core';
-import { AppState, AppStateStatus, Linking, Platform } from 'react-native';
+import { AppState, AppStateStatus, Linking, Platform, EmitterSubscription } from 'react-native';
 
 import ExponentWebBrowser from './ExpoWebBrowser';
 import {
@@ -426,6 +426,8 @@ async function _openAuthSessionPolyfillAsync(
   }
 }
 
+let _urlRedirectSubscription: EmitterSubscription | null = null;
+
 function _stopWaitingForRedirect() {
   if (!_redirectHandler) {
     throw new Error(
@@ -433,7 +435,7 @@ function _stopWaitingForRedirect() {
     );
   }
 
-  Linking.removeEventListener('url', _redirectHandler);
+  _urlRedirectSubscription?.remove();
   _redirectHandler = null;
 }
 
@@ -445,6 +447,6 @@ function _waitForRedirectAsync(returnUrl: string): Promise<WebBrowserRedirectRes
       }
     };
 
-    Linking.addEventListener('url', _redirectHandler);
+    _urlRedirectSubscription = Linking.addEventListener('url', _redirectHandler);
   });
 }
